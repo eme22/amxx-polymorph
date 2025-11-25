@@ -109,6 +109,7 @@ new g_pExtendMax
 new g_pThisMod
 new g_pNextMod
 new g_pEndOnRound
+new g_pEnableMapchooser
 
 // Existing cvars
 new g_pNextmap
@@ -140,6 +141,7 @@ public plugin_init()
 	g_pThisMod = register_cvar("poly_thismod", "")
 	g_pNextMod = register_cvar("poly_nextmod", "")
 	g_pEndOnRound = register_cvar("poly_endonround", "0")
+	g_pEnableMapchooser = register_cvar("poly_mapchooser", "1")
 	
 	/* Client Commands */
 	register_clcmd("say nextmod", "sayNextmod")
@@ -249,10 +251,14 @@ public plugin_cfg()
 			g_isLastMap = false
 		}
 	}
-	setDefaultNextmap()
-	
-	/* Set task to check when map ends */
-	set_task(20.0, "taskEndofMap", TASK_ENDOFMAP, "", 0, "b")
+
+	if( get_pcvar_num(g_pEnableMapchooser) )
+	{
+		setDefaultNextmap()
+		
+		/* Set task to check when map ends */
+		set_task(20.0, "taskEndofMap", TASK_ENDOFMAP, "", 0, "b")
+	}
 }
 
 public plugin_end()
@@ -520,7 +526,7 @@ public startModVote()
 	// Display Mod Menu
 	
 	new menu[512], a = 0, mkeys = (1<<SELECTMODS + 1) // The "None" key
-	new pos = format(menu, 511, g_coloredMenus ? "\y%s:\w^n^n" : "%s:^n^n", "Choose the Next Mod")
+	new pos = format(menu, 511, g_coloredMenus ? "\y%s:\w^n^n" : "%s:^n^n", "Choose the Next Mod") // "
 	// new pos = format(menu, 511, g_coloredMenus ? "\y%L:\w^n^n" : "%L:^n^n", LANG_SERVER, "CHOOSE_NEXTMOD") // ML
 	new modNum = g_iModCount - 1 // -1 because we exclude current running mod.
 	new dmax = (modNum > SELECTMODS) ? SELECTMODS : modNum
@@ -636,7 +642,7 @@ public startMapVote()
 	
 	new menu[512], a, mkeys = (1<<SELECTMAPS + 1)
 
-	new pos = format(menu, 511, g_coloredMenus ? "\y%L:\w^n^n" : "%L:^n^n", LANG_SERVER, "CHOOSE_NEXTM")
+	new pos = format(menu, 511, g_coloredMenus ? "\y%L:\w^n^n" : "%L:^n^n", LANG_SERVER, "CHOOSE_NEXTM") // "
 	new mapNum = g_iMapNums[g_iNextMod]
 	new dmax = (mapNum > SELECTMAPS) ? SELECTMAPS : mapNum
 	
