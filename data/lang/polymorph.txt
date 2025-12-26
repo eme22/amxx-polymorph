@@ -21,6 +21,7 @@ POLY_ADMIN_SET_MOD_USER = Admin ^3%s^1 set next mod to ^3%s
 POLY_NEXT_MOD_SET = Next mod set to ^3%s
 
 MENU_CHOOSE_MOD = Choose Next Mod:
+MENU_VOTE_RESULT = Vote Result:
 MENU_EXTEND = Extend %s
 MENU_HIDE = Hide Menu
 MENU_CHOOSE_MAP = Choose Next Map:
@@ -36,6 +37,13 @@ MENU_REM_NOM = Remove Nomination
 MENU_NOMINATE = Nominate
 MENU_AVAIL_MODS = Available Mods
 MENU_SET_NEXT_MOD = Set as Next Mod
+MENU_SETTINGS_TITLE = Polymorph Settings
+MENU_SETTINGS_CLOSE = Vote Menu Behavior: \r[Close on Vote]
+MENU_SETTINGS_REOPEN = Vote Menu Behavior: \y[Re-open on Vote]
+MENU_SETTINGS_SOUND_ON = Vote Sounds: \y[ON]
+MENU_SETTINGS_SOUND_OFF = Vote Sounds: \r[OFF]
+MENU_SETTINGS_CHAT_ON = Vote Chat Messages: \y[ON]
+MENU_SETTINGS_CHAT_OFF = Vote Chat Messages: \r[OFF]
 
 CON_PLAYING = You are currently playing %s
 CON_AVAIL_MODS = Available MODs are:
@@ -69,6 +77,7 @@ POLY_ADMIN_SET_MOD_USER = Admin ^3%s^1 establecio el siguiente mod a ^3%s
 POLY_NEXT_MOD_SET = Siguiente mod establecido a ^3%s
 
 MENU_CHOOSE_MOD = Elegir Siguiente Mod:
+MENU_VOTE_RESULT = Resultado de la votación:
 MENU_EXTEND = Extender %s
 MENU_HIDE = Ocultar Menu
 MENU_CHOOSE_MAP = Elegir Siguiente Mapa:
@@ -83,7 +92,14 @@ MENU_CHANGE_NOW = Cambiar Inmediatamente
 MENU_REM_NOM = Eliminar Nominacion
 MENU_NOMINATE = Nominar
 MENU_AVAIL_MODS = Mods Disponibles
+MENU_SETTINGS_SOUND_ON = Sonidos de Votacion: \y[ENCENDIDO]
+MENU_SETTINGS_SOUND_OFF = Sonidos de Votacion: \r[APAGADO]
+MENU_SETTINGS_CHAT_ON = Mensajes de Chat de Votacion: \y[ENCENDIDO]
+MENU_SETTINGS_CHAT_OFF = Mensajes de Chat de Votacion: \r[APAGADO]
 MENU_SET_NEXT_MOD = Establecer como Siguiente Mod
+MENU_SETTINGS_TITLE = Configuracion de Polymorph
+MENU_SETTINGS_CLOSE = Comportamiento del Menu de Votacion: \r[Cerrar al Votar]
+MENU_SETTINGS_REOPEN = Comportamiento del Menu de Votacion: \y[Reabrir al Votar]
 
 CON_PLAYING = Actualmente estas jugando %s
 CON_AVAIL_MODS = Los MODs disponibles son:
