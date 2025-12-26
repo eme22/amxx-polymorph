@@ -210,9 +210,9 @@ public client_putinserver(id)
 
 public LoadUserPrefs(id)
 {
-	new szAuth[35], szKey[40], szData[16]
-	get_user_authid(id, szAuth, charsmax(szAuth))
-	formatex(szKey, charsmax(szKey), "%s_prefs", szAuth)
+	new szName[32], szKey[40], szData[16]
+	get_user_name(id, szName, charsmax(szName))
+	formatex(szKey, charsmax(szKey), "%s_prefs", szName)
 	
 	if(nvault_get(g_hVault, szKey, szData, charsmax(szData)))
 	{
@@ -233,9 +233,9 @@ public LoadUserPrefs(id)
 
 public SaveUserPrefs(id)
 {
-	new szAuth[35], szKey[40], szData[16]
-	get_user_authid(id, szAuth, charsmax(szAuth))
-	formatex(szKey, charsmax(szKey), "%s_prefs", szAuth)
+	new szName[32], szKey[40], szData[16]
+	get_user_name(id, szName, charsmax(szName))
+	formatex(szKey, charsmax(szKey), "%s_prefs", szName)
 	
 	formatex(szData, charsmax(szData), "%d %d %d", g_iVoteBehavior[id], g_bVoteSound[id], g_bVoteChat[id])
 	nvault_set(g_hVault, szKey, szData)
