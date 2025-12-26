@@ -163,11 +163,16 @@ public plugin_init()
 	// Nomination Commands
 	register_clcmd("say nominate", "cmdNomMenu")
 	register_clcmd("say nom", "cmdNomMenu")
+	register_clcmd("amx_polymorph_nominate", "cmdNomMenu")
 	register_clcmd("say showmaps", "cmdShowMaps")
 	register_clcmd("say showmods", "cmdShowMods")
+	register_clcmd("amx_polymorph_showmaps", "cmdShowMaps")
+	register_clcmd("amx_polymorph_showmods", "cmdShowMods")
 	register_clcmd("say /vote", "cmdOpenVoteMenu")
 	register_clcmd("say vote", "cmdOpenVoteMenu")
+	register_clcmd("amx_polymorph_vote", "cmdOpenVoteMenu")
 	register_clcmd("say /settings", "cmdSettingsMenu")
+	register_clcmd("amx_polymorph_settings", "cmdSettingsMenu")
 	
 	/* Console Commands */
 	register_concmd("amx_nextmod", "cmdSetNextmod", ADMIN_MAP, " - Set the next mod manually")
@@ -220,7 +225,7 @@ public LoadUserPrefs(id)
 	}
 	else
 	{
-		g_iVoteBehavior[id] = 0 // Default: Close
+		g_iVoteBehavior[id] = 1 // Default: Re-open on vote
 		g_bVoteSound[id] = true // Default: On
 		g_bVoteChat[id] = true // Default: On
 	}
@@ -1569,15 +1574,6 @@ public cmdSettingsMenu(id)
 		formatex(szItem, charsmax(szItem), "%L", id, "MENU_SETTINGS_CHAT_OFF")
 	menu_additem(menu, szItem, "2")
 	
-	menu_setprop(menu, MPROP_EXIT, MEXIT_NEVER)
-	
-	for(new i = 0; i < 5; i++)
-		menu_addblank(menu, 1)
-	
-	menu_addtext(menu, "^n", 0)
-	
-	formatex(szItem, charsmax(szItem), "%L", id, "EXIT")
-	menu_additem(menu, szItem, "EXIT")
 	
 	menu_display(id, menu, 0)
 	return PLUGIN_HANDLED
@@ -1591,14 +1587,8 @@ public HandleSettingsMenu(id, menu, item)
 		return PLUGIN_HANDLED
 	}
 	
-	new access, info[10], callback
+	new access, info[4], callback
 	menu_item_getinfo(menu, item, access, info, charsmax(info), _, _, callback)
-	
-	if(equal(info, "EXIT"))
-	{
-		menu_destroy(menu)
-		return PLUGIN_HANDLED
-	}
 	
 	if(equal(info, "0"))
 	{
