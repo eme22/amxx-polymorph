@@ -679,7 +679,9 @@ public ShowModVoteMenu(id)
 	// Extend Option
 	if( g_bExtendMod )
 	{
-		new percent = GetPercent(g_voteModCount%L \d(%d%%)", id, "MENU_EXTEND", g_szModNames[g_iThisMod], percent)
+		new percent = GetPercent(g_voteModCount[SELECTMODS], g_voteCount)
+		if(g_iUserVoted[id][0] && g_iUserVoted[id][1] == SELECTMODS)
+			formatex(szItem, charsmax(szItem), "\y%L \d(%d%%)", id, "MENU_EXTEND", g_szModNames[g_iThisMod], percent)
 		else
 			formatex(szItem, charsmax(szItem), "\w%L \d(%d%%)", id, "MENU_EXTEND", g_szModNames[g_iThisMod], percent)
 			
@@ -689,9 +691,7 @@ public ShowModVoteMenu(id)
 	// Set Exit Button text
 	new szExit[32]
 	formatex(szExit, charsmax(szExit), "%L", id, "MENU_HIDE")
-	menu_setprop(menu, MPROP_EXITNAME, szExit
-	// Set Exit Button text
-	menu_setprop(menu, MPROP_EXITNAME, "Hide Menu")
+	menu_setprop(menu, MPROP_EXITNAME, szExit)
 	
 	// Display
 	menu_display(id, menu, 0)
@@ -884,13 +884,13 @@ public TaskVoteMapTimer()
 			ShowMapVoteMenu(id)
 		}
 	}
-}szTitle[64]
-	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_CHOOSE_MAP")
-	new menu = menu_create(szTitle
+}
 
 public ShowMapVoteMenu(id)
 {
-	new menu = menu_create("Choose Next Map:", "HandleMapVoteMenu")
+	new szTitle[64]
+	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_CHOOSE_MAP")
+	new menu = menu_create(szTitle, "HandleMapVoteMenu")
 	new szItem[64], szMap[STRLEN_MAP]
 	
 	// Add Items with Percentages
@@ -910,7 +910,13 @@ public ShowMapVoteMenu(id)
 	// Extend Option
 	new mapname[32]
 	get_mapname(mapname, 31)
-	if( g_iThisMod == g_iNextMod ) // If stay%L \d(%d%%)", id, "MENU_EXTEND", mapname, percent)
+	if( g_iThisMod == g_iNextMod ) // If staying on this mod allow extending the map.
+	{
+		if( g_fTimeLimit < g_fExtendMax )
+		{
+			new percent = GetPercent(g_voteMapCount[SELECTMAPS], g_voteCount)
+			if(g_iUserVoted[id][0] && g_iUserVoted[id][1] == SELECTMAPS)
+				formatex(szItem, charsmax(szItem), "\y%L \d(%d%%)", id, "MENU_EXTEND", mapname, percent)
 			else
 				formatex(szItem, charsmax(szItem), "\w%L \d(%d%%)", id, "MENU_EXTEND", mapname, percent)
 				
@@ -921,13 +927,7 @@ public ShowMapVoteMenu(id)
 	// Set Exit Button text
 	new szExit[32]
 	formatex(szExit, charsmax(szExit), "%L", id, "MENU_HIDE")
-	menu_setprop(menu, MPROP_EXITNAME, szExit
-			menu_additem(menu, szItem, "", 0)
-		}
-	}
-	
-	// Set Exit Button text
-	menu_setprop(menu, MPROP_EXITNAME, "Hide Menu")
+	menu_setprop(menu, MPROP_EXITNAME, szExit)
 	
 	// Display
 	menu_display(id, menu, 0)
@@ -1057,22 +1057,22 @@ public checkMapVotes()
 /*
  *	Nomination Functions
  */
-publiszTitle[64], szItem1[64], szItem2[64]
+public cmdNomMenu(id)
+{
+	if(!g_bAllowNomination)
+	{
+		client_print_color(id, print_team_default, "%s %L", g_szPrefix, id, "POLY_NOM_DISABLED")
+		return PLUGIN_HANDLED
+	}
+	
+	new szTitle[64], szItem1[64], szItem2[64]
 	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_NOMINATION")
 	formatex(szItem1, charsmax(szItem1), "%L", id, "MENU_NOM_MAP")
 	formatex(szItem2, charsmax(szItem2), "%L", id, "MENU_NOM_MOD")
 	
 	new menu = menu_create(szTitle, "NomMenuHandler")
 	menu_additem(menu, szItem1, "1")
-	menu_additem(menu, szItem2
-	{
-		client_print_color(id, print_team_default, "%s %L", g_szPrefix, id, "POLY_NOM_DISABLED")
-		return PLUGIN_HANDLED
-	}
-	
-	new menu = menu_create("Nomination Menu", "NomMenuHandler")
-	menu_additem(menu, "Nominate Map", "1")
-	menu_additem(menu, "Nominate Mod", "2")
+	menu_additem(menu, szItem2, "2")
 	
 	menu_display(id, menu, 0)
 	return PLUGIN_HANDLED
@@ -1140,9 +1140,7 @@ public DesnominarMap(id, map[])
 
 public DesnominarMod(id, mod[])
 {
-	new szTitle[64]
-	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_AVAIL_MAPS")
-	new menu = menu_create(szTitleods, mod)
+	new idx = ArrayFindString(g_aNominatedMods, mod)
 	if(idx != -1)
 	{
 		ArrayDeleteItem(g_aNominatedMods, idx)
@@ -1205,7 +1203,21 @@ public ShowMapsHandler(id, menu, item)
 			NominarMap(id, szMap)
 		}
 		
-		return PLUGIN_HANDLED%L", id, "MENU_ACTIONS_FOR", map)
+		return PLUGIN_HANDLED
+	}
+	
+	new szMap[STRLEN_MAP], access, callback
+	menu_item_getinfo(menu, item, access, szMap, charsmax(szMap), _, _, callback)
+	
+	ShowAdminMapActions(id, szMap)
+	menu_destroy(menu)
+	return PLUGIN_HANDLED
+}
+
+public ShowAdminMapActions(id, map[])
+{
+	new title[64]
+	formatex(title, charsmax(title), "%L", id, "MENU_ACTIONS_FOR", map)
 	new menu = menu_create(title, "AdminMapActionsHandler")
 	
 	new szItem[64]
@@ -1228,21 +1240,6 @@ public ShowMapsHandler(id, menu, item)
 		formatex(szItem, charsmax(szItem), "%L", id, "MENU_NOMINATE")
 		menu_additem(menu, szItem, map)
 	}
-
-public ShowAdminMapActions(id, map[])
-{
-	new title[64]
-	formatex(title, charsmax(title), "Actions for: %s", map)
-	new menu = menu_create(title, "AdminMapActionsHandler")
-	
-	menu_additem(menu, "Force Vote", map)
-	menu_additem(menu, "Set as Next Map", map)
-	menu_additem(menu, "Change Immediately", map)
-	
-	if(ArrayFindString(g_aNominatedMaps, map) != -1)
-		menu_additem(menu, "Remove Nomination", map)
-	else
-		menu_additem(menu, "Nominate", map)
 		
 	menu_display(id, menu, 0)
 }
@@ -1260,9 +1257,7 @@ public AdminMapActionsHandler(id, menu, item)
 	
 	switch(item)
 	{
-		casszTitle[64]
-	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_AVAIL_MODS")
-	new menu = menu_create(szTitle
+		case 0: // Force Vote
 		{
 			server_cmd("amx_votemap %s", map)
 		}
@@ -1312,27 +1307,15 @@ public cmdShowMods(id, level, cid)
 public ShowModsHandler(id, menu, item)
 {
 	if(item == MENU_EXIT)
-	{%L", id, "MENU_ACTIONS_FOR", mod)
-	new menu = menu_create(title, "AdminModActionsHandler")
-	
-	new szItem[64]
-	formatex(szItem, charsmax(szItem), "%L", id, "MENU_SET_NEXT_MOD")
-	menu_additem(menu, szItem, mod)
-	
-	if(ArrayFindString(g_aNominatedMods, mod) != -1)
 	{
-		formatex(szItem, charsmax(szItem), "%L", id, "MENU_REM_NOM")
-		menu_additem(menu, szItem, mod)
+		menu_destroy(menu)
+		return PLUGIN_HANDLED
 	}
-	else
+	
+	if(!access(id, ADMIN_MAP))
 	{
-		formatex(szItem, charsmax(szItem), "%L", id, "MENU_NOMINATE")
-		menu_additem(menu, szItem, mod)
-	}
-			new szMod[STRLEN_NAME], access, callback
-			menu_item_getinfo(menu, item, access, szMod, charsmax(szMod), _, _, callback)
-			NominarMod(id, szMod)
-		}
+		if(g_bAllowNomination)
+		{}
 		return PLUGIN_HANDLED
 	}
 	
