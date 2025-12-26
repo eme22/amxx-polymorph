@@ -86,23 +86,27 @@ new g_teamScore[2]
 
 /* Cvar Pointers & Variables */
 // My cvars
-new g_pMode, g_iMode
-new g_pExtendMod, g_bExtendMod
-new g_pExtendStep, Float:g_fExtendStep
-new g_pExtendMax, Float:g_fExtendMax
+new g_iMode
+new g_bExtendMod
+new Float:g_fExtendStep
+new Float:g_fExtendMax
 new g_pThisMod
 new g_pNextMod
-new g_pEndOnRound, g_bEndOnRound
+new g_bEndOnRound
 
 // New Cvars
-new g_pRevote, g_bRevote
-new g_pAllowNomination, g_bAllowNomination
+new g_bRevote
+new g_bAllowNomination
+
+// Prefix Cvar
+new g_pPrefix
+new g_szPrefix[64]
 
 // Existing cvars
 new g_pNextmap
 new g_pTimeLimit, Float:g_fTimeLimit
-new g_pVoteAnswers, g_bVoteAnswers
-new g_pChatTime, Float:g_fChatTime
+new g_bVoteAnswers
+new Float:g_fChatTime
 
 /* Constants */
 // Voting delays
@@ -117,32 +121,28 @@ public plugin_init()
 	
 	register_dictionary("mapchooser.txt")
 	register_dictionary("common.txt")
+	register_dictionary("polymorph.txt")
 	
 	/* Register Cvars */
-	g_pExtendMax = create_cvar("amx_extendmap_max", "90", FCVAR_NONE, "Maximum time limit for map extension")
-	bind_pcvar_float(g_pExtendMax, g_fExtendMax)
+	g_pPrefix = create_cvar("poly_prefix", "^4[Polymorph]^1", FCVAR_NONE, "Chat prefix for Polymorph messages")
+
+	bind_pcvar_float(create_cvar("amx_extendmap_max", "90", FCVAR_NONE, "Maximum time limit for map extension"), g_fExtendMax)
 	
-	g_pExtendStep = create_cvar("amx_extendmap_step", "15", FCVAR_NONE, "Time to extend map by (minutes)")
-	bind_pcvar_float(g_pExtendStep, g_fExtendStep)
+	bind_pcvar_float(create_cvar("amx_extendmap_step", "15", FCVAR_NONE, "Time to extend map by (minutes)"), g_fExtendStep)
 	
-	g_pMode = create_cvar("poly_mode", "2", FCVAR_NONE, "Polymorph Mode: 0=Fixed, 1=Cycle, 2=Vote")
-	bind_pcvar_num(g_pMode, g_iMode)
+	bind_pcvar_num(create_cvar("poly_mode", "2", FCVAR_NONE, "Polymorph Mode: 0=Fixed, 1=Cycle, 2=Vote"), g_iMode)
 	
-	g_pExtendMod = create_cvar("poly_extendmod", "1", FCVAR_NONE, "Allow extending the current mod")
-	bind_pcvar_num(g_pExtendMod, g_bExtendMod)
+	bind_pcvar_num(create_cvar("poly_extendmod", "1", FCVAR_NONE, "Allow extending the current mod"), g_bExtendMod)
 	
 	g_pThisMod = create_cvar("poly_thismod", "", FCVAR_NONE, "Current Mod Name (Do not change manually)")
 	g_pNextMod = create_cvar("poly_nextmod", "", FCVAR_NONE, "Next Mod Name")
 	
-	g_pEndOnRound = create_cvar("poly_endonround", "0", FCVAR_NONE, "Change map at round end instead of immediately")
-	bind_pcvar_num(g_pEndOnRound, g_bEndOnRound)
+	bind_pcvar_num(create_cvar("poly_endonround", "0", FCVAR_NONE, "Change map at round end instead of immediately"), g_bEndOnRound)
 	
 	// New Cvars
-	g_pRevote = create_cvar("poly_revote", "1", FCVAR_NONE, "Allow players to change their vote")
-	bind_pcvar_num(g_pRevote, g_bRevote)
+	bind_pcvar_num(create_cvar("poly_revote", "1", FCVAR_NONE, "Allow players to change their vote"), g_bRevote)
 	
-	g_pAllowNomination = create_cvar("poly_allow_nomination", "1", FCVAR_NONE, "Allow players to nominate maps/mods")
-	bind_pcvar_num(g_pAllowNomination, g_bAllowNomination)
+	bind_pcvar_num(create_cvar("poly_allow_nomination", "1", FCVAR_NONE, "Allow players to nominate maps/mods"), g_bAllowNomination)
 	
 	/* Client Commands */
 	register_clcmd("say nextmod", "sayNextmod")
@@ -182,17 +182,17 @@ public plugin_init()
 
 public plugin_cfg()
 {
+
+	get_pcvar_string(g_pPrefix, g_szPrefix, charsmax(g_szPrefix))
 	/* Get Cvar Pointers & Bind */
 	g_pNextmap = get_cvar_pointer("amx_nextmap")
 	
 	g_pTimeLimit = get_cvar_pointer("mp_timelimit")
 	bind_pcvar_float(g_pTimeLimit, g_fTimeLimit)
 	
-	g_pVoteAnswers = get_cvar_pointer("amx_vote_answers")
-	bind_pcvar_num(g_pVoteAnswers, g_bVoteAnswers)
+	bind_pcvar_num(get_cvar_pointer("amx_vote_answers"), g_bVoteAnswers)
 	
-	g_pChatTime = get_cvar_pointer("mp_chattime")
-	bind_pcvar_float(g_pChatTime, g_fChatTime)
+	bind_pcvar_float(get_cvar_pointer("mp_chattime"), g_fChatTime)
 
 	new szData[STRLEN_DATA]
 	new szFilepath[STRLEN_PATH], szConfigDir[STRLEN_PATH]
@@ -307,6 +307,9 @@ public plugin_natives()
 	register_native("polyn_get_thismod", "_polyn_get_thismod")
 	register_native("polyn_get_nextmod", "_polyn_get_nextmod")
 	register_native("polyn_votemod", "_polyn_votemod")
+	register_native("polyn_get_mod", "_polyn_get_mod")
+	register_native("polyn_get_modlist", "_polyn_get_modlist")
+	register_native("polyn_set_nextmod", "_polyn_set_nextmod")
 }
 
 // Native: Execute the end of map vote.
@@ -335,6 +338,61 @@ public _polyn_get_nextmod(iPlugin, iParams)
 	return g_iNextMod
 }
 
+// Native: Get a specific mod's name by ID
+public _polyn_get_mod(iPlugin, iParams)
+{
+	new modId = get_param(1)
+	if(modId < 0 || modId >= g_iModCount)
+		return 0
+
+	new iChars = get_param(3)
+	new szModName[STRLEN_NAME]
+	copy(szModName, charsmax(szModName), g_szModNames[modId])
+	set_string(2, szModName, iChars)
+	return 1
+}
+
+// Native: Get the number of loaded mods
+public _polyn_get_modlist(iPlugin, iParams)
+{
+	return g_iModCount
+}
+
+// Native: Set the next mod manually
+public _polyn_set_nextmod(iPlugin, iParams)
+{
+	new id = get_param(1)
+	new modid = get_param(2)
+	
+	if( 0 <= modid < g_iModCount )
+	{
+		if( modid == g_iNextMod )
+		{
+			if(id) console_print(id, "Next mod is already %s", g_szModNames[g_iNextMod])
+			return 0
+		}
+		
+		setNextMod(modid)
+		setDefaultNextmap()
+		
+		if(id)
+		{
+			new name[32]
+			get_user_name(id, name, 31)
+			client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_ADMIN_SET_MOD_USER", name, g_szModNames[g_iNextMod])
+			console_print(id, "%L", id, "CON_NEXT_IS_NOW", g_szModNames[g_iNextMod])
+		}
+		else
+		{
+			client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_NEXT_MOD_SET", g_szModNames[g_iNextMod])
+		}
+		return 1
+	}
+	
+	if(id) console_print(id, "Invalid Option")
+	return 0
+}
+
 // Native: Start Mod Vote (and map vote), force mapchange.
 public _polyn_votemod()
 {
@@ -354,18 +412,18 @@ public cmdSetNextmod(id, level, cid)
 	
 	if(read_argc() == 1)
 	{
-		console_print(id, "You are currently playing %s", g_szModNames[g_iThisMod]) // Need ML
-		console_print(id, "Available MODs are:") // Need ML
+		console_print(id, "%L", id, "CON_PLAYING", g_szModNames[g_iThisMod]) // Need ML
+		console_print(id, "%L", id, "CON_AVAIL_MODS") // Need ML
 		
 		// Print available mods (menu-like)
 		for(new i = 0; i < g_iModCount; i++)
 		{
-			console_print(id, i == g_iNextMod ? "%d) %s <<< Current nextmod" : "%d) %s", i+1, g_szModNames[i])
+			console_print(id, i == g_iNextMod ? "%d) %s%L" : "%d) %s", i+1, g_szModNames[i], id, "CON_CURR_NEXT")
 		}
 		
 		new szCmdName[32]
 		read_argv(0, szCmdName, charsmax(szCmdName))
-		console_print(id, "To set the next mod, type ^"%s #^"", szCmdName)
+		console_print(id, "%L", id, "CON_SET_NEXT", szCmdName)
 	}
 	else
 	{
@@ -378,14 +436,14 @@ public cmdSetNextmod(id, level, cid)
 			{
 				if( modid == g_iNextMod )
 				{
-					console_print(id, "Next mod is already %s", g_szModNames[g_iNextMod]) // Need ML
+					console_print(id, "%L", id, "CON_ALREADY_NEXT", g_szModNames[g_iNextMod]) // Need ML
 				}
 				else
 				{
 					setNextMod(modid)
 					setDefaultNextmap()
 					// Reset g_iMapsPlayed ??
-					console_print(id, "The next mod is now %s", g_szModNames[g_iNextMod])
+					console_print(id, "%L", id, "CON_NEXT_IS_NOW", g_szModNames[g_iNextMod])
 					
 					// Clear nominations if mod changed manually
 					ArrayClear(g_aNominatedMaps)
@@ -393,12 +451,12 @@ public cmdSetNextmod(id, level, cid)
 			}
 			else
 			{
-				console_print(id, "Invalid Option")
+				console_print(id, "%L", id, "CON_INVALID_OPT")
 			}
 		}
 		else
 		{
-			console_print(id, "Invalid Option")
+			console_print(id, "%L", id, "CON_INVALID_OPT")
 		}
 	}
 	return PLUGIN_HANDLED
@@ -419,7 +477,7 @@ public cmdVoteMod(id, level, cid)
 	}
 	else
 	{
-		console_print(id, "Vote not allowed at this time.")
+		console_print(id, "%L", id, "CON_VOTE_NOT_ALLOWED")
 	}
 	
 	return PLUGIN_HANDLED
@@ -430,12 +488,12 @@ public cmdVoteMod(id, level, cid)
  */
 public sayNextmod()
 {
-	client_print_color(0, print_team_default, "^4[Polymorph]^1 Next Mod: ^3%s", g_szModNames[g_iNextMod])
+	client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_NEXT_MOD", g_szModNames[g_iNextMod])
 }
 
 public sayThismod()
 {
-	client_print_color(0, print_team_default, "^4[Polymorph]^1 This Mod: ^3%s", g_szModNames[g_iThisMod])
+	client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_THIS_MOD", g_szModNames[g_iThisMod])
 }
 
 
@@ -576,7 +634,7 @@ public startModVote()
 	set_task(1.0, "TaskVoteTimer", TASK_VOTE_TIMER, _, _, "a", g_iVoteCountDown)
 	set_task(fVoteTime, "checkModVotes")
 	
-	client_print_color(0, print_team_default, "^4[Polymorph]^1 It's time to choose the next mod.")
+	client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_CHOOSE_MOD")
 	client_cmd(0, "spk Gman/Gman_Choose2")
 	log_amx("Vote: Voting for the next mod started")
 }
@@ -600,7 +658,9 @@ public TaskVoteTimer()
 
 public ShowModVoteMenu(id)
 {
-	new menu = menu_create("Choose Next Mod:", "HandleModVoteMenu")
+	new szTitle[64]
+	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_CHOOSE_MOD")
+	new menu = menu_create(szTitle, "HandleModVoteMenu")
 	new szItem[64]
 	
 	// Add Items with Percentages
@@ -619,15 +679,17 @@ public ShowModVoteMenu(id)
 	// Extend Option
 	if( g_bExtendMod )
 	{
-		new percent = GetPercent(g_voteModCount[SELECTMODS], g_voteCount)
-		if(g_iUserVoted[id][0] && g_iUserVoted[id][1] == SELECTMODS)
-			formatex(szItem, charsmax(szItem), "\yExtend %s \d(%d%%)", g_szModNames[g_iThisMod], percent)
+		new percent = GetPercent(g_voteModCount%L \d(%d%%)", id, "MENU_EXTEND", g_szModNames[g_iThisMod], percent)
 		else
-			formatex(szItem, charsmax(szItem), "\wExtend %s \d(%d%%)", g_szModNames[g_iThisMod], percent)
+			formatex(szItem, charsmax(szItem), "\w%L \d(%d%%)", id, "MENU_EXTEND", g_szModNames[g_iThisMod], percent)
 			
 		menu_additem(menu, szItem, "", 0)
 	}
 	
+	// Set Exit Button text
+	new szExit[32]
+	formatex(szExit, charsmax(szExit), "%L", id, "MENU_HIDE")
+	menu_setprop(menu, MPROP_EXITNAME, szExit
 	// Set Exit Button text
 	menu_setprop(menu, MPROP_EXITNAME, "Hide Menu")
 	
@@ -655,7 +717,7 @@ public HandleModVoteMenu(id, menu, item)
 	{
 		if(!g_bRevote)
 		{
-			client_print_color(id, print_team_default, "^4[Polymorph]^1 You have already voted.")
+			client_print_color(id, print_team_default, "%s You have already voted.", g_szPrefix)
 			menu_destroy(menu)
 			return PLUGIN_HANDLED
 		}
@@ -679,7 +741,7 @@ public HandleModVoteMenu(id, menu, item)
 		new name[32]
 		get_user_name(id, name, 31)
 		if(g_bVoteAnswers)
-			client_print_color(0, print_team_default, "^3%s^1 chose mod extending", name)
+			client_print_color(0, print_team_default, "%L", LANG_PLAYER, "POLY_VOTE_EXTEND", name)
 	}
 	else if(item < g_voteNum)
 	{
@@ -689,7 +751,7 @@ public HandleModVoteMenu(id, menu, item)
 		new name[32]
 		get_user_name(id, name, 31)
 		if(g_bVoteAnswers)
-			client_print_color(0, print_team_default, "^3%s^1 chose ^4%s", name, g_szModNames[g_nextModId[item]])
+			client_print_color(0, print_team_default, "%L", LANG_PLAYER, "POLY_VOTE_MOD", name, g_szModNames[g_nextModId[item]])
 	}
 	
 	g_iUserVoted[id][0] = 1
@@ -715,7 +777,7 @@ public checkModVotes()
 	if (g_voteModCount[SELECTMODS] > g_voteModCount[b] )
 	{
 		setNextMod(g_iThisMod)
-		client_print_color(0, print_team_default, "^4[Polymorph]^1 ^3%s^1 has been extended for one map", g_szModNames[g_iNextMod])
+		client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_MOD_EXTENDED", g_szModNames[g_iNextMod])
 		
 		// Decrement maps played to only extend mod by one map.
 		new szMapsPlayed[4]
@@ -727,7 +789,7 @@ public checkModVotes()
 	{
 		setNextMod(g_nextModId[b]) // Set g_iNextMod
 		
-		client_print_color(0, print_team_default, "^4[Polymorph]^1 Choosing finished. The nextmod will be ^3%s", g_szModNames[g_iNextMod])
+		client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_MOD_CHOSEN", g_szModNames[g_iNextMod])
 		log_amx("Vote: Voting for the next mod finished. The nextmod will be %s", g_szModNames[g_iNextMod])
 	}
 
@@ -822,7 +884,9 @@ public TaskVoteMapTimer()
 			ShowMapVoteMenu(id)
 		}
 	}
-}
+}szTitle[64]
+	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_CHOOSE_MAP")
+	new menu = menu_create(szTitle
 
 public ShowMapVoteMenu(id)
 {
@@ -846,16 +910,18 @@ public ShowMapVoteMenu(id)
 	// Extend Option
 	new mapname[32]
 	get_mapname(mapname, 31)
-	if( g_iThisMod == g_iNextMod ) // If staying on this mod allow extending the map.
-	{
-		if( g_fTimeLimit < g_fExtendMax )
-		{
-			new percent = GetPercent(g_voteMapCount[SELECTMAPS], g_voteCount)
-			if(g_iUserVoted[id][0] && g_iUserVoted[id][1] == SELECTMAPS)
-				formatex(szItem, charsmax(szItem), "\yExtend %s \d(%d%%)", mapname, percent)
+	if( g_iThisMod == g_iNextMod ) // If stay%L \d(%d%%)", id, "MENU_EXTEND", mapname, percent)
 			else
-				formatex(szItem, charsmax(szItem), "\wExtend %s \d(%d%%)", mapname, percent)
+				formatex(szItem, charsmax(szItem), "\w%L \d(%d%%)", id, "MENU_EXTEND", mapname, percent)
 				
+			menu_additem(menu, szItem, "", 0)
+		}
+	}
+	
+	// Set Exit Button text
+	new szExit[32]
+	formatex(szExit, charsmax(szExit), "%L", id, "MENU_HIDE")
+	menu_setprop(menu, MPROP_EXITNAME, szExit
 			menu_additem(menu, szItem, "", 0)
 		}
 	}
@@ -887,7 +953,7 @@ public HandleMapVoteMenu(id, menu, item)
 	{
 		if(!g_bRevote)
 		{
-			client_print_color(id, print_team_default, "^4[Polymorph]^1 You have already voted.")
+			client_print_color(id, print_team_default, "%s You have already voted.", g_szPrefix)
 			menu_destroy(menu)
 			return PLUGIN_HANDLED
 		}
@@ -983,7 +1049,7 @@ public checkMapVotes()
 		// extend to end of round
 		g_bChangeOnRoundend = true
 		set_pcvar_num(g_pTimeLimit, 0)
-		client_print_color(0, print_team_default, "^4[Polymorph]^1 Last Round! Map will change at round end.")
+		client_print_color(0, print_team_default, "%s Last Round! Map will change at round end.", g_szPrefix)
 	}
 }
 
@@ -991,11 +1057,16 @@ public checkMapVotes()
 /*
  *	Nomination Functions
  */
-public cmdNomMenu(id)
-{
-	if(!g_bAllowNomination)
+publiszTitle[64], szItem1[64], szItem2[64]
+	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_NOMINATION")
+	formatex(szItem1, charsmax(szItem1), "%L", id, "MENU_NOM_MAP")
+	formatex(szItem2, charsmax(szItem2), "%L", id, "MENU_NOM_MOD")
+	
+	new menu = menu_create(szTitle, "NomMenuHandler")
+	menu_additem(menu, szItem1, "1")
+	menu_additem(menu, szItem2
 	{
-		client_print_color(id, print_team_default, "^4[Polymorph]^1 Nominations are disabled.")
+		client_print_color(id, print_team_default, "%s %L", g_szPrefix, id, "POLY_NOM_DISABLED")
 		return PLUGIN_HANDLED
 	}
 	
@@ -1031,7 +1102,7 @@ public NominarMap(id, map[])
 {
 	if(ArrayFindString(g_aNominatedMaps, map) != -1)
 	{
-		client_print_color(id, print_team_default, "^4[Polymorph]^1 Map ^3%s^1 is already nominated.", map)
+		client_print_color(id, print_team_default, "%s %L", g_szPrefix, id, "POLY_MAP_ALREADY_NOM", map)
 		return
 	}
 	
@@ -1039,14 +1110,14 @@ public NominarMap(id, map[])
 	
 	new name[32]
 	get_user_name(id, name, 31)
-	client_print_color(0, print_team_default, "^4[Polymorph]^1 ^3%s^1 nominated map ^4%s", name, map)
+	client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_MAP_NOMINATED", name, map)
 }
 
 public NominarMod(id, mod[])
 {
 	if(ArrayFindString(g_aNominatedMods, mod) != -1)
 	{
-		client_print_color(id, print_team_default, "^4[Polymorph]^1 Mod ^3%s^1 is already nominated.", mod)
+		client_print_color(id, print_team_default, "%s %L", g_szPrefix, id, "POLY_MOD_ALREADY_NOM", mod)
 		return
 	}
 	
@@ -1054,7 +1125,7 @@ public NominarMod(id, mod[])
 	
 	new name[32]
 	get_user_name(id, name, 31)
-	client_print_color(0, print_team_default, "^4[Polymorph]^1 ^3%s^1 nominated mod ^4%s", name, mod)
+	client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_MOD_NOMINATED", name, mod)
 }
 
 public DesnominarMap(id, map[])
@@ -1063,17 +1134,19 @@ public DesnominarMap(id, map[])
 	if(idx != -1)
 	{
 		ArrayDeleteItem(g_aNominatedMaps, idx)
-		client_print_color(id, print_team_default, "^4[Polymorph]^1 Map ^3%s^1 removed from nominations.", map)
+		client_print_color(id, print_team_default, "%s %L", g_szPrefix, id, "POLY_MAP_NOM_REMOVED", map)
 	}
 }
 
 public DesnominarMod(id, mod[])
 {
-	new idx = ArrayFindString(g_aNominatedMods, mod)
+	new szTitle[64]
+	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_AVAIL_MAPS")
+	new menu = menu_create(szTitleods, mod)
 	if(idx != -1)
 	{
 		ArrayDeleteItem(g_aNominatedMods, idx)
-		client_print_color(id, print_team_default, "^4[Polymorph]^1 Mod ^3%s^1 removed from nominations.", mod)
+		client_print_color(id, print_team_default, "%s %L", g_szPrefix, id, "POLY_MOD_NOM_REMOVED", mod)
 	}
 }
 
@@ -1132,17 +1205,29 @@ public ShowMapsHandler(id, menu, item)
 			NominarMap(id, szMap)
 		}
 		
-		return PLUGIN_HANDLED
+		return PLUGIN_HANDLED%L", id, "MENU_ACTIONS_FOR", map)
+	new menu = menu_create(title, "AdminMapActionsHandler")
+	
+	new szItem[64]
+	formatex(szItem, charsmax(szItem), "%L", id, "MENU_FORCE_VOTE")
+	menu_additem(menu, szItem, map)
+	
+	formatex(szItem, charsmax(szItem), "%L", id, "MENU_SET_NEXT_MAP")
+	menu_additem(menu, szItem, map)
+	
+	formatex(szItem, charsmax(szItem), "%L", id, "MENU_CHANGE_NOW")
+	menu_additem(menu, szItem, map)
+	
+	if(ArrayFindString(g_aNominatedMaps, map) != -1)
+	{
+		formatex(szItem, charsmax(szItem), "%L", id, "MENU_REM_NOM")
+		menu_additem(menu, szItem, map)
 	}
-	
-	// Admin Actions
-	new szMap[STRLEN_MAP], access, callback
-	menu_item_getinfo(menu, item, access, szMap, charsmax(szMap), _, _, callback)
-	
-	ShowAdminMapActions(id, szMap)
-	menu_destroy(menu)
-	return PLUGIN_HANDLED
-}
+	else
+	{
+		formatex(szItem, charsmax(szItem), "%L", id, "MENU_NOMINATE")
+		menu_additem(menu, szItem, map)
+	}
 
 public ShowAdminMapActions(id, map[])
 {
@@ -1175,14 +1260,16 @@ public AdminMapActionsHandler(id, menu, item)
 	
 	switch(item)
 	{
-		case 0: // Force Vote
+		casszTitle[64]
+	formatex(szTitle, charsmax(szTitle), "%L", id, "MENU_AVAIL_MODS")
+	new menu = menu_create(szTitle
 		{
 			server_cmd("amx_votemap %s", map)
 		}
 		case 1: // Set Next
 		{
 			set_pcvar_string(g_pNextmap, map)
-			client_print_color(0, print_team_default, "^4[Polymorph]^1 Admin set next map to ^3%s", map)
+			client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_ADMIN_SET_MAP", map)
 		}
 		case 2: // Change Now
 		{
@@ -1225,15 +1312,23 @@ public cmdShowMods(id, level, cid)
 public ShowModsHandler(id, menu, item)
 {
 	if(item == MENU_EXIT)
-	{
-		menu_destroy(menu)
-		return PLUGIN_HANDLED
-	}
+	{%L", id, "MENU_ACTIONS_FOR", mod)
+	new menu = menu_create(title, "AdminModActionsHandler")
 	
-	if(!access(id, ADMIN_MAP))
+	new szItem[64]
+	formatex(szItem, charsmax(szItem), "%L", id, "MENU_SET_NEXT_MOD")
+	menu_additem(menu, szItem, mod)
+	
+	if(ArrayFindString(g_aNominatedMods, mod) != -1)
 	{
-		if(g_bAllowNomination)
-		{
+		formatex(szItem, charsmax(szItem), "%L", id, "MENU_REM_NOM")
+		menu_additem(menu, szItem, mod)
+	}
+	else
+	{
+		formatex(szItem, charsmax(szItem), "%L", id, "MENU_NOMINATE")
+		menu_additem(menu, szItem, mod)
+	}
 			new szMod[STRLEN_NAME], access, callback
 			menu_item_getinfo(menu, item, access, szMod, charsmax(szMod), _, _, callback)
 			NominarMod(id, szMod)
@@ -1287,7 +1382,7 @@ public AdminModActionsHandler(id, menu, item)
 				{
 					setNextMod(i)
 					setDefaultNextmap()
-					client_print_color(0, print_team_default, "^4[Polymorph]^1 Admin set next mod to ^3%s", mod)
+					client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_ADMIN_SET_MOD", mod)
 					break
 				}
 			}
@@ -1427,7 +1522,7 @@ public intermission()
 		// extend to end of round
 		g_bChangeOnRoundend = true
 		set_pcvar_num(g_pTimeLimit, 0)
-		client_print_color(0, print_team_default, "^4[Polymorph]^1 Last Round! Map will change at round end.")
+		client_print_color(0, print_team_default, "%s %L", g_szPrefix, LANG_PLAYER, "POLY_LAST_ROUND")
 	}
 	else
 	{
