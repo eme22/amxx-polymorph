@@ -124,7 +124,7 @@ new Float:fBetweenVote // Time between mod vote ending and map vote starting.
 
 public plugin_init()
 {
-	register_plugin("Polymorph: Mod Manager", "1.2.0", "Fysiks & MSB19")
+	register_plugin("Polymorph: Mod Manager", "1.2.0", "Fysiks & _M_")
 	create_cvar("Polymorph", "v1.2.0", FCVAR_SERVER|FCVAR_SPONLY)
 	
 	register_dictionary("mapchooser.txt")
