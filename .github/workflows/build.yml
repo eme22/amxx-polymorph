@@ -1,0 +1,37 @@
+name: Build AMXX Plugins
+
+on:
+  push:
+    paths:
+      - 'scripting/**'
+  pull_request:
+    paths:
+      - 'scripting/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup AMXX
+        uses: wopox1337/setup-amxx@v1
+        with:
+          amxmodx-version: '1.10'
+      
+      - name: Compile Plugins
+        run: |
+          mkdir -p compiled
+          for source in scripting/*.sma; do
+            echo "Compiling $source..."
+            amxxpc "$source" -o"compiled/$(basename "${source%.sma}.amxx")" -i"scripting/include"
+          done
+          
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugins
+          path: compiled/*.amxx
