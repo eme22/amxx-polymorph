@@ -192,19 +192,25 @@ public plugin_init()
 	register_clcmd("say nominate", "cmdNomMenu")
 	register_clcmd("say nom", "cmdNomMenu")
 	register_clcmd("amx_polymorph_nominate", "cmdNomMenu")
-	register_clcmd("say showmaps", "cmdShowMaps")
-	register_clcmd("say showmods", "cmdShowMods")
-	register_clcmd("amx_polymorph_showmaps", "cmdShowMaps")
-	register_clcmd("amx_polymorph_showmods", "cmdShowMods")
+
+	// Vote Menu
 	register_clcmd("say /vote", "cmdOpenVoteMenu")
 	register_clcmd("say vote", "cmdOpenVoteMenu")
 	register_clcmd("amx_polymorph_vote", "cmdOpenVoteMenu")
+
+	// Settings Menu
 	register_clcmd("say /settings", "cmdSettingsMenu")
 	register_clcmd("amx_polymorph_settings", "cmdSettingsMenu")
 	
 	/* Console Commands */
 	register_concmd("amx_nextmod", "cmdSetNextmod", ADMIN_MAP, " - Set the next mod manually")
 	register_concmd("amx_votemod", "cmdVoteMod", ADMIN_MAP, " - Start a vote for the next mod")
+
+	// Normal Menus
+	register_clcmd("amx_polymorph_showmaps", "cmdShowMaps")
+	register_clcmd("amx_polymorph_showmods", "cmdShowMods")
+	register_clcmd("say showmaps", "cmdShowMaps")
+	register_clcmd("say showmods", "cmdShowMods")
 	
 	// Admin Menus
 	register_concmd("amx_showmaps", "cmdShowMaps", -1, " - Show Maps to Clients and admins")
