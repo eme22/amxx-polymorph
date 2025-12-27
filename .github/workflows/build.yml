@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup AMXX
-        uses: wopox1337/setup-amxx@v1
+        uses: wopox1337/setup-amxxpawn@v1
         with:
           amxmodx-version: '1.10'
       
