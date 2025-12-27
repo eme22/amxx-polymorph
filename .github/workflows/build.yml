@@ -25,7 +25,7 @@ jobs:
       - name: Setup AMXX
         uses: wopox1337/setup-amxxpawn@v1
         with:
-          amxmodx-version: '1.10'
+          version: '1.10'
       
       - name: Compile Plugins
         run: |
