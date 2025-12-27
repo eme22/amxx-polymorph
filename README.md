@@ -11,6 +11,52 @@ Console command to show/choose the next MOD to be played. When you change the ne
 
 Starts a vote for the next MOD (and consequently the next map). Then it changes the map.
 
+### `amx_showmaps` / `amx_polymorph_showmaps`
+
+Show Maps to Clients and admins.
+
+### `amx_showmods` / `amx_polymorph_showmods`
+
+Show Mods to Clients and admins.
+
+### `amx_polymorph_nominate`
+
+Opens the nomination menu.
+
+### `amx_polymorph_vote`
+
+Opens the vote menu.
+
+### `amx_polymorph_settings`
+
+Opens the settings menu.
+
+## Client Commands
+
+### `say nextmod`
+Shows the next mod.
+
+### `say thismod`
+Shows the current mod.
+
+### `say nominate` / `say nom`
+Opens the nomination menu.
+
+### `say showmaps`
+Shows the map list.
+
+### `say showmods`
+Shows the mod list.
+
+### `say /vote` / `say vote`
+Opens the vote menu.
+
+### `say /settings`
+Opens the settings menu.
+
+### `say rtv` / `say rockthevote`
+Initiates RockTheVote (if poly_rtv is installed).
+
 ## Cvars
 
 ### `poly_mode <#>`

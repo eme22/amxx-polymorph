@@ -6,16 +6,44 @@
 		1: Play # maps then next mod will default to next in polymorph.ini (Map votes only)
 		2: Play # maps then next mod will be chosen by vote. (Map and Mod votes)
 		
-	Recovered Features (v1.2.0):
-		- Dynamic Voting (Percentages, Re-vote, Hide Menu)
-		- Nomination System (Mods and Maps)
-		- Admin Menus (Show Mods/Maps with actions)
-		- Modern Menu System (menu_create)
-		
-	Modernization (v1.3.0):
-		- create_cvar & bind_pcvar_*
-		- client_print_color
-		- MaxClients usage
+	Changelog:
+		0.6
+			Added function to set the default nextmap to be used when nextmod is set.
+			Added functionality to mod vote to choose options randomly and quantity can be limited with SELECTMODS (default 5) (requires re-compile)
+			Added current next mod indicator in cmdSetNextmod() function (aka amx_nextmod).
+			Drastically improved reading the .ini file (IMO).
+			Added beta amx_votemod which just starts the default vote for mod (which then calls the map vote)
+		0.7
+			Added check to disallow end of map vote if vote is already in progress from amx_votemod.
+			Added confirmation to the cmdSetNextMod() function (mod and map)
+			Added chat time (using mp_chattime cvar) when map is changed due to amx_votemod.
+			Fixed server crash when changing map due to amx_votemod.
+		0.8
+			Changed to using a folder for .ini and .cfg files.  /addons/amxmodx/configs/polymorph/ for readability
+			Added dynamic natives to enable retreiving and executing local variables and functions.
+			Removed gamename stuff because it can be done with a separate plugin with natives.
+			Added cvars for thismod and nextmod (used for example in Polymorph: GameName)
+			Added ML :(
+		1.0
+			Changed loading of MODs.  Mods are now loaded modularly.  One .ini file for each mod (in /polymorph).  No more polymorph.ini.  If MOD fails to load the whole plugin does not fail!
+		1.0.1
+			Added check for 0 mods loaded.  Set's plugin as failed.
+		1.0.2
+			Increased string length for variabls used for cvars in initModLoad() and loadMod() (now using STRLEN_DATA)
+		1.0.3 (2010/04/18)
+			Bug fix:  Nextmap is updated to reflect the nextmod's maps when there are no votes.
+		1.1.0
+			Removed cvar poly_mapspermod and moved setting to MOD file.
+		1.1.1
+			Updated error handling to be more accurate in initModLoad().
+		1.1.2
+			Fixed error when UpdatePluginFile() called with no mods loaded.
+		1.2.0
+			Dynamic Voting (Percentages, Re-vote, Hide Menu)
+			Nomination System (Mods and Maps)
+			Admin Menus (Show Mods/Maps with actions)
+			Usage of Modern Menu System
+
 */
 
 #include <amxmodx>

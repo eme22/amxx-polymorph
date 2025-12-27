@@ -2,12 +2,17 @@ name: Build AMXX Plugins
 
 on:
   push:
+    branches: [ "main", "master" ]
     paths:
       - 'scripting/**'
   pull_request:
+    branches: [ "main", "master" ]
     paths:
       - 'scripting/**'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -35,3 +40,24 @@ jobs:
         with:
           name: plugins
           path: compiled/*.amxx
+
+      - name: Get Version
+        id: get_version
+        run: |
+          # Extract version from register_plugin line in polymorph.sma
+          VERSION=$(grep 'register_plugin("Polymorph: Mod Manager"' scripting/polymorph.sma | cut -d'"' -f4)
+          echo "Detected version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Release
+        if: (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'))
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
+          files: compiled/*.amxx
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
