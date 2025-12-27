@@ -87,6 +87,76 @@ Number of minutes added when the map is extended.  Same as the original mapchoos
 
 Default: 15
 
+### `poly_prefix <string>`
+
+Chat prefix for Polymorph messages.
+
+Default: `^4[Polymorph]^1`
+
+### `poly_endonround <1|0>`
+
+Change map at round end instead of immediately.
+
+Default: 0
+
+### `poly_revote <1|0>`
+
+Allow players to change their vote.
+
+Default: 1
+
+### `poly_allow_nomination <1|0>`
+
+Allow players to nominate maps/mods.
+
+Default: 1
+
+### `poly_vote_time <seconds>`
+
+Time to choose an option in vote.
+
+Default: 20.0
+
+### `poly_vote_delay <seconds>`
+
+Time between mod vote ending and map vote starting.
+
+Default: 10.0
+
+### `poly_thismod <string>`
+
+Current Mod Name (Do not change manually).
+
+### `poly_nextmod <string>`
+
+Next Mod Name.
+
+## RTV Cvars (if poly_rtv is installed)
+
+### `rtv_enable <1|0>`
+
+Enable RockTheVote.
+
+Default: 1
+
+### `rtv_ratio <0.0-1.0>`
+
+Ratio of players needed to rock the vote.
+
+Default: 0.51
+
+### `rtv_wait <minutes>`
+
+Minutes after mapstart you can rtv.
+
+Default: 1
+
+### `rtv_show <1|0>`
+
+Display how many more votes needed to rtv.
+
+Default: 1
+
 ## Setup
 
 - Install polymorph.amxx like any other plugin.
