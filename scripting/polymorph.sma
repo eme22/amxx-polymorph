@@ -104,6 +104,7 @@ new g_nextModId[MODS_MAX]
 new g_voteModCount[MODS_MAX + 2]
 new bool:g_bVoteForced = false
 new bool:g_bChangeOnRoundend = false
+new bool:g_bChangeMapAfterVote = true
 
 // Dynamic Vote Vars
 new g_iUserVoted[33][2] // [id][0] = has voted?, [id][1] = item index
@@ -412,7 +413,12 @@ public plugin_natives()
 // Native: Execute the end of map vote.
 public _polyn_endofmap(iPlugin, iParams)
 {
-	execEndofMap()
+	new bool:bChangeMap = true
+	if (iParams >= 1)
+	{
+		bChangeMap = bool:get_param(1)
+	}
+	execEndofMap(bChangeMap)
 }
 
 // Native: Get this mod's name and return it's id
@@ -636,11 +642,13 @@ public taskEndofMap()
 
 	g_selected = true
 	
-	execEndofMap()
+	execEndofMap(true)
 }
 
-public execEndofMap()
+public execEndofMap(bool:bChangeMap)
 {
+	g_bChangeMapAfterVote = bChangeMap
+
 	// Disallow vote if someone put up vote for new mod already.
 	if( task_exists(TASK_FORCED_MAPCHANGE) )
 		return
@@ -1294,7 +1302,8 @@ public checkMapVotes()
 			g_bVoteForced = false
 		}
 		
-		set_task(2.0, "intermission")
+		if (g_bChangeMapAfterVote)
+			set_task(2.0, "intermission")
 	}
 }
 

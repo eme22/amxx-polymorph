@@ -5,7 +5,7 @@
 #include <amxmodx>
 // #include <polymorph>
 
-native polyn_endofmap()
+native polyn_endofmap(change_map = 1)
 
 public plugin_init()
 {
@@ -15,5 +15,5 @@ public plugin_init()
 // Called by gungame.
 public voteNextmap()
 {
-	polyn_endofmap()
+	polyn_endofmap(0)
 }

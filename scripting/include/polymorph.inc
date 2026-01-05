@@ -14,9 +14,10 @@
  * Executes the end of map vote.
  * Follows the restrictions set by poly_mode.
  *
+ * @param change_map    If true, changes the map after the vote. If false, only sets nextmap.
  * @noreturn
  */
-native polyn_endofmap()
+native polyn_endofmap(change_map = 1)
 
 /**
  * Gets the current mod's name and ID.
